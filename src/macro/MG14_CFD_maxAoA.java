@@ -7,8 +7,6 @@ import star.base.neo.NeoObjectVector;
 import star.base.report.ExpressionReport;
 import star.common.*;
 import star.flow.*;
-import star.meshing.MeshOperationManager;
-import star.meshing.MeshPipelineController;
 import star.vis.Scene;
 
 import javax.swing.*;
@@ -17,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class MG14_CFD extends StarMacro {
+public class MG14_CFD_maxAoA extends StarMacro {
     
     // Folder path: must contain input text file; all outputs will be located here
     public static final String folder = "I:\\Projects\\Star-NX\\Stepushkin\\";
@@ -28,12 +26,15 @@ public class MG14_CFD extends StarMacro {
         /*"Линии потока"*/"Velocity res"};
     public static final int iterations = 8000;
     public int counter = 1;
+    public double planeWeight = 98.1;
+    public double delta = 0.005;
+    public double stepAoA = 5;
 
 //    public double[] arr_reports;
     
     public String
         folderForResults = folder + "\\Results",
-        n_testName = "MG 14_CFD",
+        n_testName = "MG 14_CFD_cruseAoA",
         n_folderToSave = "",
         n_folderToSave_2 = "",
         n_folderToSavePress = "",
@@ -110,25 +111,36 @@ public class MG14_CFD extends StarMacro {
             // The following construct is a "for-each" loop...
             for (SimData sD: listCases) {
                 
-                // Print line to output window to show how far the process has reached
-                theSim.println("Inside the loop. Running case with angle " + sD.getAngle());
+                boolean flag = true;
+                double angleAoA;
+                double forceY;
+                double deltaY;
+                double prevAoA = 0;
+                double prevY = 0;
                 
-                // Подготовка переменных для следующего цикла
-                runner.varPreparation(sD);
                 
-                // Поворот рабочей СК
-                runner.RotateCS(sD);
-                
-                runner.SwitchBounderies(sD);
-                
-                // Очистка сетки и ремеш
-                theSim.get(MeshPipelineController.class).clearGeneratedMeshes();
-                theSim.get(MeshOperationManager.class).executeAll();
-                
-                // Set various conditions, clear previous solution, run simulation for x iterations
-                runner.runCase(sD, outData, outDataPress, iterations);
-                
-                theSim.saveState(String.format("%s\\%s.sim", folder, n_testName) /*folder + "\\" + n_testName + ".sim"*/);
+                do {
+                    // Print line to output window to show how far the process has reached
+                    theSim.println("Inside the loop. Running case with angle " + sD.getAngle());
+    
+                    // Подготовка переменных для следующего цикла
+                    runner.varPreparation(sD);
+    
+                    // Поворот рабочей СК
+                    runner.RotateCS(sD);
+    
+                    runner.SwitchBounderies(sD);
+    
+                    // Set various conditions, clear previous solution, run simulation for x iterations
+                    runner.runCase(sD, outData, outDataPress, iterations);
+                    
+                    angleAoA = sD.getAngle();
+                    forceY = outData.m_Y;
+                    deltaY = planeWeight - forceY;
+                    theSim.println("Дельта подъемной силы: " + deltaY);
+    
+                    {
+                        theSim.saveState(String.format("%s\\%s.sim", folder, n_testName) /*folder + "\\" + n_testName + ".sim"*/);
 /**
  // Retrieve the drag coefficient from the SimData object and write it to file
  writer.writeDataLine(sD, outData);
@@ -136,70 +148,92 @@ public class MG14_CFD extends StarMacro {
  // Пишем в файл данные по давлению
  writerPress.writeDataLine(sD, outDataPress);
  */
-                // Пишем в файл данные общие
-                writerFull.writeDataLine(sD, outData, outDataPress);
-                
-                n_folderToSave = String.format("%s\\Test %s\\Normal\\Pictures\\%d %s %s", folderForResults, n_testName,
-                    counter, n_testName, sD.getAngle());
-                
-                n_folderToSave_2 = String.format("%s\\Test %s\\Normal\\Pictures\\", folderForResults, n_testName);
-                
-                // Save hardcopies of vel mag and streamlines scenes, and residual plot
+                        // Пишем в файл данные общие
+                        writerFull.writeDataLine(sD, outData, outDataPress);
     
-                for (int i = 0; i < sceneNames.length; i++) {
-                    postP.export3DScene(String.format("%s\\Test %s\\%d. 3Dexport\\%s.sce", folderForResults,
-                        n_testName, counter, sceneNames[i]), sceneNames[i]);
+                        n_folderToSave = String.format("%s\\Test %s\\Normal\\Pictures\\%d %s %s", folderForResults, n_testName,
+                            counter, n_testName, sD.getAngle());
+    
+                        n_folderToSave_2 = String.format("%s\\Test %s\\Normal\\Pictures\\", folderForResults, n_testName);
+    
+                        // Save hardcopies of vel mag and streamlines scenes, and residual plot
+    
+                        for (int i = 0; i < sceneNames.length; i++) {
+                            postP.export3DScene(String.format("%s\\Test %s\\%d. 3Dexport\\%s.sce", folderForResults,
+                                n_testName, counter, sceneNames[i]), sceneNames[i]);
+                        }
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveVelMagScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[1],
+                            counter, n_testName, sD.getAngle()), 1);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveVelVecScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[0],
+                            counter, n_testName, sD.getAngle()), 1);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.savePressScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[2],
+                            counter, n_testName, sD.getAngle()), 1);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveStreamLinesScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[3],
+                            counter, n_testName, sD.getAngle()), 1);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveResidualPlot(String.format("%s\\Residuals\\%d Test %s %s.png", n_folderToSave_2, counter,
+                            n_testName, sD.getAngle()));
+    
+                        // Сохранение картинок с данными по давлению
+                        n_folderToSavePress = String.format("%s\\Test %s\\Pressure\\Pictures\\%d %s %s", folderForResults,
+                            n_testName, counter, n_testName, sD.getAngle());
+    
+                        n_folderToSavePress_2 = String.format("%s\\Test %s\\Pressure\\Pictures\\", folderForResults, n_testName);
+    
+                        // Save hardcopies of vel mag and streamlines scenes, and residual plot
+                        // Копия в отдельную папку с картинками
+                        postP.saveVelMagScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
+                            sceneNames[1], counter, n_testName, sD.getAngle()), 2);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveVelVecScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
+                            sceneNames[0], counter, n_testName, sD.getAngle()), 2);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.savePressScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
+                            sceneNames[2], counter, n_testName, sD.getAngle()), 2);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveStreamLinesScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
+                            sceneNames[3], counter, n_testName, sD.getAngle()), 2);
+    
+                        // Копия в отдельную папку с картинками
+                        postP.saveResidualPlot(String.format("%s\\Residuals\\%d Test %s %s.png", n_folderToSavePress_2,
+                            counter, n_testName, sD.getAngle()));
+                    }
+                    
+                    if (Math.abs(deltaY) > delta) {
+                        if (angleAoA == 0) {
+                            prevAoA = sD.getAngle();
+                            prevY = outData.getY();
+                            sD.setAngle(angleAoA + stepAoA);
+                            theSim.println("Новый угол атаки: " + (angleAoA + stepAoA));
+                        } else {
+                            double deltaStep = deltaY * (prevAoA - sD.getAngle()) / (prevY - outData.getY());
+                            prevY = outData.getY();
+                            prevAoA = sD.getAngle();
+                            sD.setAngle(angleAoA + deltaStep);
+                            theSim.println("Новый угол атаки: " + (angleAoA + stepAoA));
+                        }
+                    } else {
+                        flag = false;
+                    }
+    
+    
+                    ++counter;
                 }
-
-                // Копия в отдельную папку с картинками
-                postP.saveVelMagScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[1],
-                    counter, n_testName, sD.getAngle()), 1);
-
-                // Копия в отдельную папку с картинками
-                postP.saveVelVecScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[0],
-                    counter, n_testName, sD.getAngle()), 1);
-
-                // Копия в отдельную папку с картинками
-                postP.savePressScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[2],
-                    counter, n_testName, sD.getAngle()), 1);
-
-                // Копия в отдельную папку с картинками
-                postP.saveStreamLinesScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSave_2, sceneNames[3],
-                    counter, n_testName, sD.getAngle()), 1);
-
-                // Копия в отдельную папку с картинками
-                postP.saveResidualPlot(String.format("%s\\Residuals\\%d Test %s %s.png", n_folderToSave_2, counter,
-                    n_testName, sD.getAngle()));
-                
-                // Сохранение картинок с данными по давлению
-                n_folderToSavePress = String.format("%s\\Test %s\\Pressure\\Pictures\\%d %s %s", folderForResults,
-                    n_testName, counter, n_testName, sD.getAngle());
-                
-                n_folderToSavePress_2 = String.format("%s\\Test %s\\Pressure\\Pictures\\", folderForResults, n_testName);
-
-                // Save hardcopies of vel mag and streamlines scenes, and residual plot
-                // Копия в отдельную папку с картинками
-                postP.saveVelMagScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
-                    sceneNames[1], counter, n_testName, sD.getAngle()), 2);
-
-                // Копия в отдельную папку с картинками
-                postP.saveVelVecScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
-                    sceneNames[0], counter, n_testName, sD.getAngle()), 2);
-
-                // Копия в отдельную папку с картинками
-                postP.savePressScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
-                    sceneNames[2], counter, n_testName, sD.getAngle()), 2);
-
-                // Копия в отдельную папку с картинками
-                postP.saveStreamLinesScene(String.format("%s\\%s\\%d Test %s %s.png", n_folderToSavePress_2,
-                    sceneNames[3], counter, n_testName, sD.getAngle()), 2);
-
-                // Копия в отдельную папку с картинками
-                postP.saveResidualPlot(String.format("%s\\Residuals\\%d Test %s %s.png", n_folderToSavePress_2,
-                    counter, n_testName, sD.getAngle()));
-
-                ++counter;
+                while (flag);
             }
+            
         } catch (Exception e) {
             // Included for debugging, create a window displaying the error message
             JOptionPane.showMessageDialog(
@@ -265,6 +299,10 @@ public class MG14_CFD extends StarMacro {
         
         public double getTurbIntence() {
             return m_turbIntence;
+        }
+        
+        public void setAngle(double angle) {
+            this.m_alphaDeg = angle;
         }
     }
     
