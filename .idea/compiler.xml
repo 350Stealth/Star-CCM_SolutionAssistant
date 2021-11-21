@@ -9,5 +9,8 @@
         <module name="Star-CCM_SolutionAssistant" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Star-CCM_SolutionAssistant" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
