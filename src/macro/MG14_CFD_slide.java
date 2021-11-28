@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class MG14_CFD extends StarMacro {
+public class MG14_CFD_slide extends StarMacro {
     
     // Folder path: must contain input text file; all outputs will be located here
     public static final String folder = "I:\\Projects\\Star-NX\\Stepushkin\\";
@@ -33,7 +33,7 @@ public class MG14_CFD extends StarMacro {
     
     public String
         folderForResults = folder + "\\Results",
-        n_testName = "MG 14_CFD",
+        n_testName = "MG 14_CFD slide",
         n_folderToSave = "",
         n_folderToSave_2 = "",
         n_folderToSavePress = "",
@@ -86,7 +86,7 @@ public class MG14_CFD extends StarMacro {
             theSim.println("Создан объект PostProcessor");
             
             // Set up DataWriter (this creates the output file and writes headings)
-            DataWriter writer =
+/*            DataWriter writer =
                 new DataWriter(String.format("%s\\Test %s\\Test %s Results.txt", folderForResults, n_testName, n_testName));
             
             theSim.println("Создан объект DataWriter");
@@ -94,7 +94,7 @@ public class MG14_CFD extends StarMacro {
             DataWriter writerPress =
                 new DataWriter(String.format("%s\\Test %s\\Test %s Results pressure.txt", folderForResults, n_testName, n_testName));
             
-            theSim.println("Создан объект DataWriterPress");
+            theSim.println("Создан объект DataWriterPress");*/
             
             DataWriterFull writerFull =
                 new DataWriterFull(String.format("%s\\Test %s\\Test %s Results Full.txt", folderForResults, n_testName, n_testName));
@@ -128,7 +128,7 @@ public class MG14_CFD extends StarMacro {
                 // Set various conditions, clear previous solution, run simulation for x iterations
                 runner.runCase(sD, outData, outDataPress, iterations);
                 
-                theSim.saveState(String.format("%s\\%s.sim", folder, n_testName) /*folder + "\\" + n_testName + ".sim"*/);
+                theSim.saveState(String.format("%s\\%s.sim", folder, n_testName));
 /**
  // Retrieve the drag coefficient from the SimData object and write it to file
  writer.writeDataLine(sD, outData);
@@ -276,10 +276,12 @@ public class MG14_CFD extends StarMacro {
         
         private double m_X = 0.0;
         private double m_Y = 0.0;
+        private double m_Z = 0.0;
         private double m_Cx = 0.0;
         private double m_Cy = 0.0;
         private double m_K = 0.0;
         private double m_Mz = 0.0;
+        private double m_My = 0.0;
         private double m_Cmz = 0.0;
         private double m_Re = 0.0;
         
@@ -287,31 +289,30 @@ public class MG14_CFD extends StarMacro {
         public double getX() {
             return m_X;
         }
-        
         public double getY() {
             return m_Y;
         }
-        
+        public double getZ() {
+            return m_Z;
+        }
         public double getCx() {
             return m_Cx;
         }
-        
         public double getCy() {
             return m_Cy;
         }
-        
         public double getK() {
             return m_K;
         }
-        
         public double getMz() {
             return m_Mz;
         }
-        
+        public double getMy() {
+            return m_My;
+        }
         public double getCmz() {
             return m_Cmz;
         }
-        
         public double getRe() {
             return m_Re;
         }
@@ -320,31 +321,30 @@ public class MG14_CFD extends StarMacro {
         public void setX(double param) {
             m_X = param;
         }
-        
         public void setY(double param) {
             m_Y = param;
         }
-        
+        public void setZ(double param) {
+            m_Z = param;
+        }
         public void setK(double param) {
             m_K = param;
         }
-        
         public void setCx(double param) {
             m_Cx = param;
         }
-        
         public void setCy(double param) {
             m_Cy = param;
         }
-        
         public void setMz(double param) {
             m_Mz = param;
         }
-        
+        public void setMy(double param) {
+            m_My = param;
+        }
         public void setCmz(double param) {
             m_Cmz = param;
         }
-        
         public void setRe(double param) {
             m_Re = param;
         }
@@ -513,21 +513,7 @@ public class MG14_CFD extends StarMacro {
                     new FileWriter(m_outputFile);
                 BufferedWriter bw =
                     new BufferedWriter(fw);
-                bw.write(
-                    "Alpha	" +
-                        "V	" +
-                        "Cx	" +
-                        "Cy	" +
-                        "K	" +
-                        "Y	" +
-                        "X	" +
-                        "Cmz	" +
-                        "Mz	" +
-                        "Cxp	" +
-                        "Cyp	" +
-                        "Kp	" +
-                        "Cmzp	"
-                );
+                bw.write("Alpha\tV\tCx\tCy\tK\tY\tX\tZ\tCmz\tMz\tMy\tCxp\tCyp\tKp\tCmzp");
                 bw.newLine();
                 bw.close();
             } catch (Exception e) {
@@ -544,21 +530,10 @@ public class MG14_CFD extends StarMacro {
                 FileWriter fw = new FileWriter(m_outputFile, true);
                 BufferedWriter bw = new BufferedWriter(fw);
                 // Write cross-wind flow angle and drag coefficient to output file
-                bw.write(
-                    sD.getAngle() + "	" +
-                        sD.getVelocity() + "	" +
-                        outD.getCx() + "	" +
-                        outD.getCy() + "	" +
-                        outD.getK() + "	" +
-                        outD.getY() + "	" +
-                        outD.getX() + "	" +
-                        outD.getCmz() + "	" +
-                        outD.getMz() + "	" +
-                        outDp.getCx() + "	" +
-                        outDp.getCy() + "	" +
-                        outDp.getK() + "	" +
-                        outDp.getCmz()
-                );
+                bw.write(String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+                    sD.getAngle(), sD.getVelocity(), outD.getCx(), outD.getCy(), outD.getK(), outD.getY(),
+                    outD.getX(), outD.getZ(), outD.getCmz(), outD.getMz(), outD.getMy(), outDp.getCx(), outDp.getCy(),
+                    outDp.getK(), outDp.getCmz()));
                 // Move cursor to next line in file for next set of data to be added
                 bw.newLine();
                 // Close file
@@ -575,29 +550,31 @@ public class MG14_CFD extends StarMacro {
      */
     public class SimRunner {
         
-        private Simulation m_simUsed = null;
+        private Simulation m_simUsed;
         // Instance variables - properties in simulation that will be set using SimData
         private VelocityProfile m_initVel = null;
         private VelocityProfile m_inflowVel = null;
         private ForceReport
-            m_forceX = null,
-            m_forceY = null,
-            m_forceXpress = null,
-            m_forceYpress = null;
+            m_forceX,
+            m_forceY,
+            m_forceZ,
+            m_forceXpress,
+            m_forceYpress;
         private ForceCoefficientReport
-            m_coefCx = null,
-            m_coefCy = null,
-            m_coefCxpress = null,
-            m_coefCypress = null;
+            m_coefCx,
+            m_coefCy,
+            m_coefCxpress,
+            m_coefCypress;
         private ExpressionReport
-            m_expK = null,
-            m_expKpress = null;
+            m_expK,
+            m_expKpress;
         private MomentCoefficientReport
-            m_momentCoefCmz = null,
-            m_momentCoefCmzpress = null;
+            m_momentCoefCmz,
+            m_momentCoefCmzpress;
         private MomentReport
-            m_momentMz = null,
-            m_momentMzpress = null;
+            m_momentMz,
+            m_momentMy,
+            m_momentMzpress;
         private String
             n_AngleOfAttack = "Угол атаки",
             n_Velocity = "Скаляр V",
@@ -610,8 +587,10 @@ public class MG14_CFD extends StarMacro {
             n_Cy = "Cy",
             n_X = "X",
             n_Y = "Y",
+            n_Z = "Z",
             n_Cmz = "Cmz",
             n_Mz = "Mz",
+            n_My = "My",
             n_K = "K";
         private String
             np_Cx = "Cxp",
@@ -637,6 +616,8 @@ public class MG14_CFD extends StarMacro {
             
             m_forceY = (ForceReport) m_simUsed.getReportManager().getReport(n_Y);
             
+            m_forceZ = (ForceReport) m_simUsed.getReportManager().getReport(n_Z);
+            
             m_coefCx = (ForceCoefficientReport) m_simUsed.getReportManager().getReport(n_Cx);
             
             m_coefCy = (ForceCoefficientReport) m_simUsed.getReportManager().getReport(n_Cy);
@@ -646,6 +627,8 @@ public class MG14_CFD extends StarMacro {
             m_momentCoefCmz = (MomentCoefficientReport) m_simUsed.getReportManager().getReport(n_Cmz);
             
             m_momentMz = (MomentReport) m_simUsed.getReportManager().getReport(n_Mz);
+            
+            m_momentMy = (MomentReport) m_simUsed.getReportManager().getReport(n_My);
             
             // Получаем ссылки на отчеты по давлению
             
@@ -729,10 +712,8 @@ public class MG14_CFD extends StarMacro {
                 // Поворот на угол атаки в радианах
                 cCS_Used.getLocalCoordinateSystemManager().rotateLocalCoordinateSystems(
                     new NeoObjectVector(new Object[]{cCS_Used}),
-                    new DoubleVector(new double[]{0.0, 0.0, 1.0}),
-                    new NeoObjectVector(new Object[]{u_Lines, u_Lines, u_Lines}),
-                    sD.getAngleRad(),
-                    cCS_Used);
+                    new DoubleVector(new double[]{0.0, 1.0, 0.0}),
+                    new NeoObjectVector(new Object[]{u_Lines, u_Lines, u_Lines}), sD.getAngleRad(), lCS_Used);
             }
         }
         
@@ -763,64 +744,25 @@ public class MG14_CFD extends StarMacro {
 
 // Записываем полученные значения после расчета
             // Получаем X
-            double XValue = m_forceX.getReportMonitorValue();
-            
             // Сохраняем X в OutputData
-            outD.setX(XValue);
-            
-            double YValue = m_forceY.getReportMonitorValue();
-            
-            outD.setY(YValue);
-            
-            double CxValue = m_coefCx.getReportMonitorValue();
-            
-            outD.setCx(CxValue);
-            
-            double CyValue = m_coefCy.getReportMonitorValue();
-            
-            outD.setCy(CyValue);
-            
-            double KValue = m_expK.getReportMonitorValue();
-            
-            outD.setK(KValue);
-            
-            double CmzValue = m_momentCoefCmz.getReportMonitorValue();
-            
-            outD.setCmz(CmzValue);
-            
-            double MzValue = m_momentMz.getReportMonitorValue();
-            
-            outD.setMz(MzValue);
+            outD.setX(m_forceX.getReportMonitorValue());
+            outD.setY(m_forceY.getReportMonitorValue());
+            outD.setZ(m_forceZ.getReportMonitorValue());
+            outD.setCx(m_coefCx.getReportMonitorValue());
+            outD.setCy(m_coefCy.getReportMonitorValue());
+            outD.setK(m_expK.getReportMonitorValue());
+            outD.setCmz(m_momentCoefCmz.getReportMonitorValue());
+            outD.setMz(m_momentMz.getReportMonitorValue());
+            outD.setMy(m_momentMy.getReportMonitorValue());
             
             // Сохраняем данные по давлению в OutputDataPress
-            
-            double XValuepress = m_forceXpress.getReportMonitorValue();
-            
-            outDpress.setX(XValuepress);
-            
-            double YValuepress = m_forceYpress.getReportMonitorValue();
-            
-            outDpress.setY(YValuepress);
-            
-            double CxValuepress = m_coefCxpress.getReportMonitorValue();
-            
-            outDpress.setCx(CxValuepress);
-            
-            double CyValuepress = m_coefCypress.getReportMonitorValue();
-            
-            outDpress.setCy(CyValuepress);
-            
-            double KValuepress = m_expKpress.getReportMonitorValue();
-            
-            outDpress.setK(KValuepress);
-            
-            double CmzValuepress = m_momentCoefCmzpress.getReportMonitorValue();
-            
-            outDpress.setCmz(CmzValuepress);
-            
-            double MzValuepress = m_momentMzpress.getReportMonitorValue();
-            
-            outDpress.setMz(MzValuepress);
+            outDpress.setX(m_forceXpress.getReportMonitorValue());
+            outDpress.setY(m_forceYpress.getReportMonitorValue());
+            outDpress.setCx(m_coefCxpress.getReportMonitorValue());
+            outDpress.setCy(m_coefCypress.getReportMonitorValue());
+            outDpress.setK(m_expKpress.getReportMonitorValue());
+            outDpress.setCmz(m_momentCoefCmzpress.getReportMonitorValue());
+            outDpress.setMz(m_momentMzpress.getReportMonitorValue());
         }
     }
     

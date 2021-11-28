@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="ext">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../../../StarLibs/platform/modules/ext" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../../../StarLibs/platform/modules/ext" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/../../../../StarLibs/platform/modules/ext" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/../../../../StarLibs/platform/modules/ext" recursive="false" type="SOURCES" />
+  </library>
+</component>
