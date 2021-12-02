@@ -713,7 +713,7 @@ public class MG14_CFD_slide extends StarMacro {
                 cCS_Used.getLocalCoordinateSystemManager().rotateLocalCoordinateSystems(
                     new NeoObjectVector(new Object[]{cCS_Used}),
                     new DoubleVector(new double[]{0.0, 1.0, 0.0}),
-                    new NeoObjectVector(new Object[]{u_Lines, u_Lines, u_Lines}), sD.getAngleRad(), lCS_Used);
+                    new NeoObjectVector(new Object[]{u_Lines, u_Lines, u_Lines}), sD.getAngleRad(), cCS_Used);
             }
         }
         
