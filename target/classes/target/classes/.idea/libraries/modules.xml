@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="modules">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../../../StarLibs/platform/modules" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/../../../../StarLibs/platform/modules" recursive="false" />
+  </library>
+</component>

@@ -1,0 +1,5 @@
+AngDeg VelTrn VelWnd InitVelTrn InitVelWnd
+0 22 6 20 5
+30 22 6 20 5
+60 22 6 20 5
+90 22 6 20 5
